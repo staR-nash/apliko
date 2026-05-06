@@ -1,401 +1,528 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  ChevronRight, ChevronLeft, Lightbulb, Target, Rocket, 
-  GraduationCap, Compass, Brain, CheckCircle2, Loader2, 
-  Flame, Trophy, Code, Briefcase, Palette, Heart, Timer, X,
-  Users, Zap, ShieldCheck, Check
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApLiKo - Chestionar Vocațional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
 
-/**
- * LOGO OFICIAL APLIKO 
- */
-const ApLiKoLogo = ({ className = "w-10 h-10" }) => (
-  <svg viewBox="0 0 1000 1000" className={className} xmlns="http://www.w3.org/2000/svg">
-    <circle cx="500" cy="620" r="340" fill="none" stroke="#6b21a8" strokeWidth="55" />
-    <path d="M500 330 L540 580 L790 620 L540 660 L500 910 L460 660 L210 620 L460 580 Z" fill="#6b21a8" />
-    <path d="M500 450 L530 595 L675 620 L530 645 L500 790 L470 645 L325 620 L470 595 Z" fill="#4338ca" />
-    <circle cx="500" cy="620" r="48" fill="#1e1b4b" />
-    <path d="M220 330 L500 160 L780 330 L500 440 Z" fill="#6b21a8" />
-    <path d="M500 160 L780 330 L500 440 Z" fill="#000000" fillOpacity="0.15" />
-    <path d="M310 385 V455 C310 455 390 505 500 505 C610 505 690 455 690 455 V385" fill="#4338ca" />
-    <path d="M220 330 V470" stroke="#1e1b4b" strokeWidth="20" strokeLinecap="round" />
-    <circle cx="220" cy="490" r="32" fill="#1e1b4b" />
-  </svg>
-);
+            to {
+                opacity: 1;
+            }
+        }
 
-const App = () => {
-  const [step, setStep] = useState('landing');
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState(null);
-  const [streak, setStreak] = useState(5);
-  const [dailyQuizOpen, setDailyQuizOpen] = useState(false);
-  const [activeChallenge, setActiveChallenge] = useState(null);
-  const [dailyStatus, setDailyStatus] = useState('pending');
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
 
-  const dailyChallenges = [
-    { 
-      id: 'tech', 
-      title: 'Codul Zilei', 
-      desc: 'Eroare de logică.', 
-      icon: <Code size={20} className="text-blue-500" />, 
-      color: 'border-blue-200',
-      question: "Ce valoare returnează funcția test()?",
-      code: `function test() {\n  let x = 10;\n  if (true) {\n    let x = 20;\n  }\n  return x;\n}`,
-      options: [10, 20, "Error"],
-      correct: 10,
-      explanation: "Variabila 'x' din interiorul block-ului IF este limitată la acel context (block-scope)."
-    },
-    { 
-      id: 'biz', 
-      title: 'Strategia', 
-      desc: 'Piața optimă.', 
-      icon: <Briefcase size={20} className="text-orange-500" />, 
-      color: 'border-orange-200',
-      question: "Care e piața optimă pentru un produs premium?",
-      options: ["Supermarket", "Restaurante Lux", "Export"],
-      correct: "Restaurante Lux",
-      explanation: "Segmentul de lux apreciază calitatea și povestea brandului."
-    },
-    { 
-      id: 'creative', 
-      title: 'Viziunea', 
-      desc: 'Branding AI.', 
-      icon: <Palette size={20} className="text-pink-500" />, 
-      color: 'border-pink-200',
-      question: "Ce culoare transmite 'Încredere' în tech?",
-      options: ["Roz Neon", "Albastru Cobalt", "Portocaliu"],
-      correct: "Albastru Cobalt",
-      explanation: "Albastrul este standardul pentru stabilitate și profesionalism."
-    },
-    { 
-      id: 'social', 
-      title: 'Empatia', 
-      desc: 'Client furios.', 
-      icon: <Heart size={20} className="text-red-500" />, 
-      color: 'border-red-200',
-      question: "Cum răspunzi corect unui client nemulțumit?",
-      options: ["Negare", "Validare emoție", "Ignorare"],
-      correct: "Validare emoție",
-      explanation: "Oamenii vor să se simtă ascultați înainte de a primi soluții."
-    },
-  ];
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
 
-  const questions = [
-    {
-      id: 1,
-      text: "Cum preferi să îți petreci timpul liber în weekend?",
-      options: [
-        { label: "Analizând date sau rezolvând puzzle-uri complexe", value: "tech", icon: "🧠" },
-        { label: "Creând conținut vizual sau scriind povești", value: "creative", icon: "🎨" },
-        { label: "Organizând evenimente sau coordonând echipe", value: "business", icon: "📊" },
-        { label: "Ajutând prietenii să își rezolve problemele personale", value: "social", icon: "🤝" }
-      ]
-    },
-    {
-      id: 2,
-      text: "Ce tip de proiect te-ar entuziasma cel mai mult la școală?",
-      options: [
-        { label: "Dezvoltarea unei aplicații care rezolvă o problemă", value: "tech", icon: "💻" },
-        { label: "Realizarea unei campanii publicitare virale", value: "creative", icon: "📱" },
-        { label: "Construirea unui plan de afaceri pentru un startup", value: "business", icon: "🚀" },
-        { label: "Un proiect de voluntariat în comunitate", value: "social", icon: "🌍" }
-      ]
-    },
-    {
-      id: 3,
-      text: "Dacă ai avea resurse nelimitate, ce ai schimba în lume?",
-      options: [
-        { label: "Aș automatiza procesele greoaie prin tehnologie", value: "tech", icon: "🤖" },
-        { label: "Aș încuraja exprimarea artistică în toate formele ei", value: "creative", icon: "🎭" },
-        { label: "Aș revoluționa modul în care funcționează piețele globale", value: "business", icon: "💸" },
-        { label: "Aș asigura acces egal la educație și sănătate pentru toți", value: "social", icon: "🩺" }
-      ]
-    }
-  ];
+        @keyframes slideInBottom {
+            from {
+                opacity: 0;
+                transform: translateY(2rem);
+            }
 
-  const handleStart = () => setStep('quiz');
-  const handlePricing = () => setStep('pricing');
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-  const handleAnswer = (value) => {
-    const newAnswers = { ...answers, [currentQuestion]: value };
-    setAnswers(newAnswers);
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      processResults(newAnswers);
-    }
-  };
+        .animate-fade-in {
+            animation: fadeIn 0.7s ease-out forwards;
+        }
 
-  const processResults = (finalAnswers) => {
-    setIsProcessing(true);
-    setStep('processing');
-    setTimeout(() => {
-      const counts = Object.values(finalAnswers).reduce((acc, val) => {
-        acc[val] = (acc[val] || 0) + 1;
-        return acc;
-      }, {});
-      const topCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-      const resultsData = {
-        tech: { title: "Tech Builder", description: "Arhitectul viitorului digital.", roadmap: [{ year: "Anul 1", action: "Curs Python + Robotică" }, { year: "Anul 2", action: "Hackathon STEM" }, { year: "Anul 3", action: "Facultate Profil Tehnic" }], match: 94 },
-        business: { title: "Business Explorer", description: "Lider cu viziune strategică.", roadmap: [{ year: "Anul 1", action: "Bazele Antreprenoriatului" }, { year: "Anul 2", action: "Lansare Proiect Pilot" }, { year: "Anul 3", action: "Management Universitar" }], match: 91 },
-        creative: { title: "Creative Thinker", description: "Expert în estetică și comunicare.", roadmap: [{ year: "Anul 1", action: "Design & Adobe Suite" }, { year: "Anul 2", action: "Portofoliu vizual" }, { year: "Anul 3", action: "Design Grafic / Media" }], match: 89 },
-        social: { title: "Impact Social", description: "Empatie și ajutorare comunitară.", roadmap: [{ year: "Anul 1", action: "Voluntariat ONG" }, { year: "Anul 2", action: "Lider Proiect Social" }, { year: "Anul 3", action: "Psihologie / Medicină" }], match: 92 }
-      };
-      setResult(resultsData[topCategory]);
-      setStep('result');
-      setIsProcessing(false);
-    }, 1500);
-  };
+        .animate-zoom-in {
+            animation: zoomIn 0.3s ease-out forwards;
+        }
 
-  const openChallenge = (challenge) => {
-    setActiveChallenge(challenge);
-    setDailyStatus('pending');
-    setDailyQuizOpen(true);
-  };
+        .animate-slide-in {
+            animation: slideInBottom 0.5s ease-out forwards;
+        }
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans selection:bg-purple-100 pb-12">
-      {/* Navbar - Container mai îngust */}
-      <nav className="flex items-center justify-between px-6 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
-        <div className="max-w-4xl mx-auto w-full flex justify-between items-center text-slate-900">
-          <div onClick={() => setStep('landing')} className="flex items-center gap-3 cursor-pointer group">
-            <ApLiKoLogo className="w-11 h-11 drop-shadow-md group-hover:scale-105 transition-transform" />
-            <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-800 uppercase leading-none">ApLiKo</span>
-              <span className="text-[10px] font-bold text-slate-400 tracking-[0.1em] mt-0.5 uppercase leading-none">S.R.L.</span>
+        /* Hide scrollbar for code blocks */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans selection:bg-purple-100 pb-12">
+
+    <!-- Navbar -->
+    <nav class="flex items-center justify-between px-6 py-4 bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-4xl mx-auto w-full flex justify-between items-center text-slate-900">
+            <div onclick="setStep('landing')" class="flex items-center gap-3 cursor-pointer group">
+                <svg viewBox="0 0 1000 1000" class="w-11 h-11 drop-shadow-md group-hover:scale-105 transition-transform" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="500" cy="620" r="340" fill="none" stroke="#6b21a8" stroke-width="55" />
+                    <path d="M500 330 L540 580 L790 620 L540 660 L500 910 L460 660 L210 620 L460 580 Z" fill="#6b21a8" />
+                    <path d="M500 450 L530 595 L675 620 L530 645 L500 790 L470 645 L325 620 L470 595 Z" fill="#4338ca" />
+                    <circle cx="500" cy="620" r="48" fill="#1e1b4b" />
+                    <path d="M220 330 L500 160 L780 330 L500 440 Z" fill="#6b21a8" />
+                    <path d="M500 160 L780 330 L500 440 Z" fill="#000000" fill-opacity="0.15" />
+                    <path d="M310 385 V455 C310 455 390 505 500 505 C610 505 690 455 690 455 V385" fill="#4338ca" />
+                    <path d="M220 330 V470" stroke="#1e1b4b" stroke-width="20" stroke-linecap="round" />
+                    <circle cx="220" cy="490" r="32" fill="#1e1b4b" />
+                </svg>
+                <div class="flex flex-col">
+                    <span class="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-800 uppercase leading-none">ApLiKo</span>
+                    <span class="text-[10px] font-bold text-slate-400 tracking-[0.1em] mt-0.5 uppercase leading-none">S.R.L.</span>
+                </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-5">
-            <div className="flex items-center gap-1.5 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 shadow-sm">
-              <Flame size={18} className="text-orange-500 fill-orange-500" />
-              <span className="text-sm font-black text-orange-700">{streak}</span>
+
+            <div class="flex items-center gap-5">
+                <div class="flex items-center gap-1.5 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 shadow-sm">
+                    <i data-lucide="flame" class="w-[18px] h-[18px] text-orange-500 fill-orange-500"></i>
+                    <span id="streak-counter" class="text-sm font-black text-orange-700">5</span>
+                </div>
+                <button class="px-5 py-2 bg-indigo-600 text-white rounded-full text-xs font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95">Contul Meu</button>
             </div>
-            <button className="px-5 py-2 bg-indigo-600 text-white rounded-full text-xs font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95">Contul Meu</button>
-          </div>
         </div>
-      </nav>
+    </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-6 text-slate-900">
-        {step === 'landing' && (
-          <div className="space-y-8 animate-in fade-in duration-700">
-            {/* Hero Section */}
-            <div className="text-center space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-[10px] font-black uppercase tracking-widest border border-purple-100 shadow-sm mx-auto">
-                <Brain size={12} /> <span>Viitorul tău. Aplicat</span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">
-                Găsește-ți vocația <br/>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-800">cu puterea AI</span>
-              </h1>
-              <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto leading-relaxed font-medium">
-                Mentorul tău personal de carieră care îți arată pas cu pas cum să aplici ceea ce înveți.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
-                <button onClick={handleStart} className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 active:scale-95 transition-all">
-                  <Target size={22} /> Chestionar Principal
-                </button>
-                <button onClick={handlePricing} className="px-8 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-lg hover:bg-black flex items-center justify-center gap-2 shadow-xl shadow-slate-200 active:scale-95 transition-all">
-                  <Brain size={22} className="text-yellow-400" /> Discută cu AI
-                </button>
-              </div>
+    <main class="max-w-4xl mx-auto px-6 py-6 text-slate-900 relative">
+
+        <!-- SECTION: LANDING -->
+        <div id="step-landing" class="space-y-8 animate-fade-in block">
+            <!-- Hero Section -->
+            <div class="text-center space-y-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-[10px] font-black uppercase tracking-widest border border-purple-100 shadow-sm mx-auto">
+                    <i data-lucide="brain" class="w-3 h-3"></i> <span>Viitorul tău. Aplicat</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight">
+                    Găsește-ți vocația <br />
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-800">cu puterea AI</span>
+                </h1>
+                <p class="text-lg md:text-xl text-slate-500 max-w-xl mx-auto leading-relaxed font-medium">
+                    Mentorul tău personal de carieră care îți arată pas cu pas cum să aplici ceea ce înveți.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 pt-2">
+                    <button onclick="setStep('quiz')" class="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 active:scale-95 transition-all">
+                        <i data-lucide="target" class="w-[22px] h-[22px]"></i> Chestionar Principal
+                    </button>
+                    <button onclick="setStep('pricing')" class="px-8 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-lg hover:bg-black flex items-center justify-center gap-2 shadow-xl shadow-slate-200 active:scale-95 transition-all">
+                        <i data-lucide="brain" class="w-[22px] h-[22px] text-yellow-400"></i> Discută cu AI
+                    </button>
+                </div>
             </div>
 
-            {/* DAILY CHALLENGES - Secțiune optimizată și compactă */}
-            <section className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-xl border border-slate-50">
-              <div className="flex items-center justify-between mb-4 border-b border-slate-50 pb-3">
-                <div>
-                  <h2 className="text-2xl font-black tracking-tight flex items-center gap-2 text-slate-800 leading-none">
-                    Întrebarea Zilei <span className="text-slate-300 font-normal text-lg italic leading-none">— Provocări</span>
-                  </h2>
-                  <p className="text-sm text-slate-400 mt-1 font-medium leading-none">Colectează puncte XP prin puzzle-uri rapide!</p>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 shadow-inner">
-                  <Timer size={14} /> Expira în 14h 22m
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-4">
-                {dailyChallenges.map((game) => (
-                  <button 
-                    key={game.id}
-                    onClick={() => openChallenge(game)}
-                    className={`flex flex-col items-center gap-3 p-5 bg-white border-b-4 ${game.color} rounded-2xl hover:bg-slate-50 transition-all group border-x border-t border-slate-50 shadow-sm hover:shadow-md hover:-translate-y-1`}
-                  >
-                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
-                      {game.icon}
+            <!-- Daily Challenges -->
+            <section class="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-xl border border-slate-50">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-50 pb-3">
+                    <div>
+                        <h2 class="text-2xl font-black tracking-tight flex items-center gap-2 text-slate-800 leading-none">
+                            Întrebarea Zilei <span class="text-slate-300 font-normal text-lg italic leading-none">— Provocări</span>
+                        </h2>
+                        <p class="text-sm text-slate-400 mt-1 font-medium leading-none">Colectează puncte XP prin puzzle-uri rapide!</p>
                     </div>
-                    <div className="text-center">
-                      <h3 className="font-black text-sm text-slate-800 leading-tight uppercase tracking-wide">{game.title}</h3>
-                      <p className="hidden md:block text-xs text-slate-400 mt-1 leading-snug font-bold italic">{game.desc}</p>
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 shadow-inner">
+                        <i data-lucide="timer" class="w-3.5 h-3.5"></i> Expira în 14h 22m
                     </div>
-                  </button>
-                ))}
-              </div>
+                </div>
+                <div id="challenges-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Challenges injected via JS -->
+                </div>
             </section>
-          </div>
-        )}
+        </div>
 
-        {/* SECȚIUNEA QUIZ - Mai compactă și font ajustat */}
-        {step === 'quiz' && (
-          <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-slate-50 animate-in zoom-in-95 duration-300 text-center max-w-xl mx-auto">
-            <span className="text-xs font-black text-purple-600 uppercase tracking-widest leading-none">Întrebarea {currentQuestion + 1} din {questions.length}</span>
-            <div className="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden shadow-inner">
-                <div className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 transition-all duration-500" style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }} />
-            </div>
-            <h2 className="text-xl md:text-3xl font-black mb-8 mt-6 tracking-tight leading-tight text-slate-800 px-2">
-              {questions[currentQuestion].text}
-            </h2>
-            <div className="grid grid-cols-1 gap-3">
-              {questions[currentQuestion].options.map((opt, idx) => (
-                <button key={idx} onClick={() => handleAnswer(opt.value)} className="flex items-center p-4 md:p-5 bg-slate-50 border-2 border-transparent rounded-2xl hover:bg-white hover:border-purple-300 hover:shadow-xl transition-all text-left group active:scale-[0.98]">
-                  <span className="text-2xl mr-4 group-hover:scale-110 transition-transform">{opt.icon}</span>
-                  <span className="text-base md:text-lg font-bold text-slate-700 group-hover:text-purple-900 leading-tight">{opt.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 'processing' && (
-          <div className="text-center py-20 text-slate-900">
-            <Loader2 className="w-16 h-16 text-purple-600 animate-spin mx-auto mb-4" />
-            <h2 className="text-2xl font-black mb-2">Analizăm viitorul...</h2>
-            <p className="text-slate-400 text-lg font-medium italic">Sincronizăm modelul AI cu profilul tău.</p>
-          </div>
-        )}
-
-        {step === 'result' && (
-          <div className="animate-in slide-in-from-bottom-8 max-w-3xl mx-auto text-slate-900">
-            <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100">
-              <div className="bg-gradient-to-br from-purple-800 to-indigo-900 p-10 text-white text-left relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-12 opacity-10"><Rocket size={120} /></div>
-                <div className="relative z-10">
-                  <div className="bg-white/10 px-4 py-1.5 rounded-full inline-block text-xs font-black uppercase tracking-widest border border-white/10 mb-4">Match {result.match}%</div>
-                  <h2 className="text-4xl md:text-5xl font-black leading-none tracking-tight mb-3">{result.title}</h2>
-                  <p className="text-lg md:text-xl text-purple-100/90 leading-tight font-medium italic">"{result.description}"</p>
+        <!-- SECTION: QUIZ -->
+        <div id="step-quiz" class="hidden animate-zoom-in text-center max-w-xl mx-auto">
+            <div class="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-slate-50">
+                <span id="quiz-progress-text" class="text-xs font-black text-purple-600 uppercase tracking-widest leading-none">Întrebarea 1 din 3</span>
+                <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden shadow-inner">
+                    <div id="quiz-progress-bar" class="h-full bg-gradient-to-r from-purple-600 to-indigo-600 transition-all duration-500" style="width: 33%"></div>
                 </div>
-              </div>
-              <div className="p-8 md:p-12">
-                <div className="grid grid-cols-3 gap-5 mb-10">
-                  {result.roadmap.map((item, idx) => (
-                    <div key={idx} className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-xl transition-all group text-left">
-                      <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-4 font-black text-lg group-hover:scale-110 transition-transform">
-                        {idx + 1}
-                      </div>
-                      <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 block">{item.year}</span>
-                      <p className="text-slate-800 font-bold text-sm md:text-base leading-snug">{item.action}</p>
-                    </div>
-                  ))}
+                <h2 id="quiz-question-text" class="text-xl md:text-3xl font-black mb-8 mt-6 tracking-tight leading-tight text-slate-800 px-2">
+                    <!-- Question text injected here -->
+                </h2>
+                <div id="quiz-options" class="grid grid-cols-1 gap-3">
+                    <!-- Options injected here -->
                 </div>
-                <div className="p-8 bg-indigo-600 rounded-[2.5rem] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl shadow-indigo-200">
-                  <div className="max-w-md text-left">
-                    <h4 className="text-xl font-black mb-1">Deblochează planul complet</h4>
-                    <p className="text-indigo-100 text-sm font-medium">Treci la <b>ApLiKo+</b> pentru încă 12 pași secreți.</p>
-                  </div>
-                  <button onClick={() => setStep('pricing')} className="whitespace-nowrap px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-lg hover:bg-slate-50 shadow-xl active:scale-95 transition-all">
-                    Abonament (8€)
-                  </button>
+            </div>
+        </div>
+
+        <!-- SECTION: PROCESSING -->
+        <div id="step-processing" class="hidden text-center py-20 text-slate-900 animate-fade-in">
+            <i data-lucide="loader-2" class="w-16 h-16 text-purple-600 animate-spin mx-auto mb-4"></i>
+            <h2 class="text-2xl font-black mb-2">Analizăm viitorul...</h2>
+            <p class="text-slate-400 text-lg font-medium italic">Sincronizăm modelul AI cu profilul tău.</p>
+        </div>
+
+        <!-- SECTION: RESULT -->
+        <div id="step-result" class="hidden animate-slide-in max-w-3xl mx-auto text-slate-900">
+            <div class="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100">
+                <div class="bg-gradient-to-br from-purple-800 to-indigo-900 p-10 text-white text-left relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-12 opacity-10">
+                        <i data-lucide="rocket" class="w-[120px] h-[120px]"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="bg-white/10 px-4 py-1.5 rounded-full inline-block text-xs font-black uppercase tracking-widest border border-white/10 mb-4">Match <span id="result-match">90</span>%</div>
+                        <h2 id="result-title" class="text-4xl md:text-5xl font-black leading-none tracking-tight mb-3">Title</h2>
+                        <p id="result-desc" class="text-lg md:text-xl text-purple-100/90 leading-tight font-medium italic">"Description"</p>
+                    </div>
                 </div>
-                <button onClick={() => setStep('landing')} className="mt-10 text-slate-400 hover:text-purple-600 font-black text-xs uppercase tracking-[0.3em] flex items-center gap-2 transition-colors mx-auto block">
-                    <ChevronLeft size={16} /> Reîncepe Testul
-                </button>
-              </div>
+                <div class="p-8 md:p-12">
+                    <div id="result-roadmap" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+                        <!-- Roadmap injected here -->
+                    </div>
+                    <div class="p-8 bg-indigo-600 rounded-[2.5rem] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl shadow-indigo-200">
+                        <div class="max-w-md text-left">
+                            <h4 class="text-xl font-black mb-1">Deblochează planul complet</h4>
+                            <p class="text-indigo-100 text-sm font-medium">Treci la <b class="font-bold">ApLiKo+</b> pentru încă 12 pași secreți.</p>
+                        </div>
+                        <button onclick="setStep('pricing')" class="whitespace-nowrap px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-lg hover:bg-slate-50 shadow-xl active:scale-95 transition-all">
+                            Abonament (8€)
+                        </button>
+                    </div>
+                    <button onclick="setStep('landing')" class="mt-10 text-slate-400 hover:text-purple-600 font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-2 transition-colors mx-auto block w-full text-center">
+                        <i data-lucide="chevron-left" class="w-4 h-4 inline"></i> Reîncepe Testul
+                    </button>
+                </div>
             </div>
-          </div>
-        )}
+        </div>
 
-        {step === 'pricing' && (
-          <div className="animate-in fade-in duration-700 space-y-8 text-slate-900">
-            <button onClick={() => setStep('landing')} className="text-slate-400 font-black text-xs flex items-center gap-2 uppercase tracking-widest hover:text-indigo-600 transition-all"><ChevronLeft size={16} /> Înapoi la Acasă</button>
-            <div className="grid lg:grid-cols-2 gap-10 items-center">
-               <div className="space-y-6 text-left">
-                 <h2 className="text-4xl md:text-5xl font-black leading-tight text-slate-900">Consiliere de top <br/> la un <span className="text-indigo-600">click distanță</span></h2>
-                 <p className="text-lg text-slate-500 font-medium leading-relaxed">AI optimizat de psihologi vocaționali pentru generația Z.</p>
-                 <div className="flex gap-4">
-                    <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                      <ShieldCheck className="text-indigo-600" /> <span className="font-bold text-sm">Validat de Experți</span>
+        <!-- SECTION: PRICING -->
+        <div id="step-pricing" class="hidden animate-fade-in space-y-8 text-slate-900">
+            <button onclick="setStep('landing')" class="text-slate-400 font-black text-xs flex items-center gap-2 uppercase tracking-widest hover:text-indigo-600 transition-all">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i> Înapoi la Acasă
+            </button>
+            <div class="grid lg:grid-cols-2 gap-10 items-center">
+                <div class="space-y-6 text-left">
+                    <h2 class="text-4xl md:text-5xl font-black leading-tight text-slate-900">Consiliere de top <br /> la un <span class="text-indigo-600">click distanță</span></h2>
+                    <p class="text-lg text-slate-500 font-medium leading-relaxed">AI optimizat de psihologi vocaționali pentru generația Z.</p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                            <i data-lucide="shield-check" class="text-indigo-600"></i> <span class="font-bold text-sm">Validat de Experți</span>
+                        </div>
+                        <div class="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                            <i data-lucide="zap" class="text-yellow-500 fill-yellow-500"></i> <span class="font-bold text-sm">Acces Imediat</span>
+                        </div>
                     </div>
-                    <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                      <Zap className="text-yellow-500 fill-yellow-500" /> <span className="font-bold text-sm">Acces Imediat</span>
+                </div>
+                <div class="bg-[#0F172A] p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                    <div class="space-y-6">
+                        <div class="border border-white/10 p-6 rounded-3xl flex justify-between items-center hover:bg-white/5 transition-all cursor-pointer">
+                            <div class="text-left">
+                                <h4 class="text-xl font-black">Apliko+</h4>
+                                <p class="text-[10px] text-indigo-400 font-bold uppercase mt-1">Recomandat Elevi</p>
+                            </div>
+                            <span class="text-3xl font-black">8€ <span class="text-sm font-normal opacity-40">/ lună</span></span>
+                        </div>
+                        <div class="bg-gradient-to-br from-indigo-600 to-purple-800 p-8 rounded-3xl flex justify-between items-center shadow-xl shadow-indigo-900/50 hover:scale-[1.02] transition-all cursor-pointer">
+                            <div class="text-left">
+                                <h4 class="text-2xl font-black">Apliko++</h4>
+                                <p class="text-[10px] text-white/60 font-bold uppercase mt-1 tracking-widest">Premium VIP</p>
+                            </div>
+                            <span class="text-3xl font-black">18€ <span class="text-sm font-normal opacity-40">/ lună</span></span>
+                        </div>
                     </div>
-                 </div>
-               </div>
-               <div className="bg-[#0F172A] p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                  <div className="space-y-6">
-                    <div className="border border-white/10 p-6 rounded-3xl flex justify-between items-center hover:bg-white/5 transition-all cursor-pointer">
-                      <div className="text-left">
-                        <h4 className="text-xl font-black">Apliko+</h4>
-                        <p className="text-[10px] text-indigo-400 font-bold uppercase mt-1">Recomandat Elevi</p>
-                      </div>
-                      <span className="text-3xl font-black">8€ <span className="text-sm font-normal opacity-40">/ lună</span></span>
-                    </div>
-                    <div className="bg-gradient-to-br from-indigo-600 to-purple-800 p-8 rounded-3xl flex justify-between items-center shadow-xl shadow-indigo-900/50 hover:scale-[1.02] transition-all cursor-pointer">
-                      <div className="text-left">
-                        <h4 className="text-2xl font-black">Apliko++</h4>
-                        <p className="text-[10px] text-white/60 font-bold uppercase mt-1 tracking-widest">Premium VIP</p>
-                      </div>
-                      <span className="text-3xl font-black">18€ <span className="text-sm font-normal opacity-40">/ lună</span></span>
-                    </div>
-                  </div>
-               </div>
+                </div>
             </div>
-          </div>
-        )}
+        </div>
 
-        {/* Challenge Modal */}
-        {dailyQuizOpen && activeChallenge && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 text-left text-slate-900">
-              <div className="bg-indigo-600 p-8 text-white relative">
-                 <button onClick={() => setDailyQuizOpen(false)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"><X size={24} /></button>
-                 <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">{activeChallenge.title}</span>
-                 <h2 className="text-2xl font-black leading-tight mt-3">{activeChallenge.question}</h2>
-              </div>
-              <div className="p-8">
-                 {dailyStatus === 'pending' ? (
-                   <div className="space-y-4">
-                    {activeChallenge.code && <pre className="bg-slate-900 text-green-400 p-6 rounded-2xl font-mono text-sm overflow-x-auto shadow-inner border-l-4 border-indigo-500">{activeChallenge.code}</pre>}
-                    {activeChallenge.options.map((val) => (
-                      <button key={val} onClick={() => setDailyStatus(val === activeChallenge.correct ? 'correct' : 'wrong')} className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-lg hover:bg-white hover:border-indigo-300 hover:shadow-lg transition-all text-left flex justify-between items-center group">
-                        {val} <ChevronRight size={20} className="text-indigo-300 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    ))}
-                   </div>
-                 ) : (
-                   <div className="text-center space-y-6 py-4">
-                      <div className={`w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-lg ${dailyStatus === 'correct' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                        {dailyStatus === 'correct' ? <CheckCircle2 size={48} /> : <X size={48} />}
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-3xl font-black">{dailyStatus === 'correct' ? 'Excelent!' : 'Nu-i nimic!'}</h3>
-                        <p className="text-slate-500 font-medium text-lg px-6 leading-relaxed">{dailyStatus === 'correct' ? activeChallenge.explanation : 'Fiecare încercare te aduce mai aproape de succes. Reîncearcă mâine!'}</p>
-                      </div>
-                      <button onClick={() => setDailyQuizOpen(false)} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all text-center">Continuă</button>
-                   </div>
-                 )}
-              </div>
+        <!-- MODAL: CHALLENGE -->
+        <div id="modal-challenge" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/70 backdrop-blur-md animate-fade-in">
+            <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 text-left text-slate-900">
+                <div class="bg-indigo-600 p-8 text-white relative">
+                    <button onclick="closeChallenge()" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                    <span id="challenge-modal-tag" class="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">TAG</span>
+                    <h2 id="challenge-modal-question" class="text-2xl font-black leading-tight mt-3">Question?</h2>
+                </div>
+                <div class="p-8">
+                    <!-- Pending Status -->
+                    <div id="challenge-status-pending" class="space-y-4">
+                        <pre id="challenge-modal-code" class="hidden bg-slate-900 text-green-400 p-6 rounded-2xl font-mono text-sm overflow-x-auto shadow-inner border-l-4 border-indigo-500 no-scrollbar"></pre>
+                        <div id="challenge-modal-options" class="space-y-4 mt-4">
+                            <!-- Options injected here -->
+                        </div>
+                    </div>
+                    <!-- Finished Status -->
+                    <div id="challenge-status-finished" class="hidden text-center space-y-6 py-4">
+                        <div id="challenge-result-icon" class="w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-lg">
+                            <!-- Icon injected -->
+                        </div>
+                        <div class="space-y-2">
+                            <h3 id="challenge-result-title" class="text-3xl font-black">Excelent!</h3>
+                            <p id="challenge-result-desc" class="text-slate-500 font-medium text-lg px-6 leading-relaxed">Explanation</p>
+                        </div>
+                        <button onclick="closeChallenge()" class="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all text-center">Continuă</button>
+                    </div>
+                </div>
             </div>
-          </div>
-        )}
-      </main>
+        </div>
 
-      <footer className="py-12 border-t border-slate-100 mt-8 bg-white text-center text-slate-900">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-4 opacity-30 grayscale">
-              <ApLiKoLogo className="w-7 h-7" />
-              <span className="text-lg font-black uppercase tracking-tighter">ApLiKo</span>
+    </main>
+
+    <footer class="py-12 border-t border-slate-100 mt-8 bg-white text-center text-slate-900">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex items-center justify-center gap-2 mb-4 opacity-30 grayscale">
+                <svg viewBox="0 0 1000 1000" class="w-7 h-7" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="500" cy="620" r="340" fill="none" stroke="#6b21a8" stroke-width="55" />
+                    <path d="M500 330 L540 580 L790 620 L540 660 L500 910 L460 660 L210 620 L460 580 Z" fill="#6b21a8" />
+                    <path d="M500 450 L530 595 L675 620 L530 645 L500 790 L470 645 L325 620 L470 595 Z" fill="#4338ca" />
+                </svg>
+                <span class="text-lg font-black uppercase tracking-tighter">ApLiKo</span>
             </div>
-            <p className="text-slate-400 text-xs font-bold tracking-wide">
-              © 2026 ApLiKo S.R.L. — Viitorul tău. Aplicat.
+            <p class="text-slate-400 text-xs font-bold tracking-wide">
+                © 2026 ApLiKo S.R.L. — Viitorul tău. Aplicat.
             </p>
-          </div>
-      </footer>
-    </div>
-  );
-};
+        </div>
+    </footer>
 
-export default App;
+    <script>
+        // Data Structures
+        const dailyChallenges = [
+            { id: 'tech', title: 'Codul Zilei', desc: 'Eroare de logică.', icon: 'code', iconColor: 'text-blue-500', color: 'border-blue-200', question: "Ce valoare returnează funcția test()?", code: "function test() {\n  let x = 10;\n  if (true) {\n    let x = 20;\n  }\n  return x;\n}", options: [10, 20, "Error"], correct: 10, explanation: "Variabila 'x' din interiorul block-ului IF este limitată la acel context (block-scope)." },
+            { id: 'biz', title: 'Strategia', desc: 'Piața optimă.', icon: 'briefcase', iconColor: 'text-orange-500', color: 'border-orange-200', question: "Care e piața optimă pentru un produs premium?", options: ["Supermarket", "Restaurante Lux", "Export"], correct: "Restaurante Lux", explanation: "Segmentul de lux apreciază calitatea și povestea brandului." },
+            { id: 'creative', title: 'Viziunea', desc: 'Branding AI.', icon: 'palette', iconColor: 'text-pink-500', color: 'border-pink-200', question: "Ce culoare transmite 'Încredere' în tech?", options: ["Roz Neon", "Albastru Cobalt", "Portocaliu"], correct: "Albastru Cobalt", explanation: "Albastrul este standardul pentru stabilitate și profesionalism." },
+            { id: 'social', title: 'Empatia', desc: 'Client furios.', icon: 'heart', iconColor: 'text-red-500', color: 'border-red-200', question: "Cum răspunzi corect unui client nemulțumit?", options: ["Negare", "Validare emoție", "Ignorare"], correct: "Validare emoție", explanation: "Oamenii vor să se simtă ascultați înainte de a primi soluții." }
+        ];
+
+        const questions = [
+            {
+                id: 1, text: "Cum preferi să îți petreci timpul liber în weekend?",
+                options: [
+                    { label: "Analizând date sau rezolvând puzzle-uri complexe", value: "tech", icon: "🧠" },
+                    { label: "Creând conținut vizual sau scriind povești", value: "creative", icon: "🎨" },
+                    { label: "Organizând evenimente sau coordonând echipe", value: "business", icon: "📊" },
+                    { label: "Ajutând prietenii să își rezolve problemele personale", value: "social", icon: "🤝" }
+                ]
+            },
+            {
+                id: 2, text: "Ce tip de proiect te-ar entuziasma cel mai mult la școală?",
+                options: [
+                    { label: "Dezvoltarea unei aplicații care rezolvă o problemă", value: "tech", icon: "💻" },
+                    { label: "Realizarea unei campanii publicitare virale", value: "creative", icon: "📱" },
+                    { label: "Construirea unui plan de afaceri pentru un startup", value: "business", icon: "🚀" },
+                    { label: "Un proiect de voluntariat în comunitate", value: "social", icon: "🌍" }
+                ]
+            },
+            {
+                id: 3, text: "Dacă ai avea resurse nelimitate, ce ai schimba în lume?",
+                options: [
+                    { label: "Aș automatiza procesele greoaie prin tehnologie", value: "tech", icon: "🤖" },
+                    { label: "Aș încuraja exprimarea artistică în toate formele ei", value: "creative", icon: "🎭" },
+                    { label: "Aș revoluționa modul în care funcționează piețele globale", value: "business", icon: "💸" },
+                    { label: "Aș asigura acces egal la educație și sănătate pentru toți", value: "social", icon: "🩺" }
+                ]
+            }
+        ];
+
+        const resultsData = {
+            tech: { title: "Tech Builder", description: "Arhitectul viitorului digital.", roadmap: [{ year: "Anul 1", action: "Curs Python + Robotică" }, { year: "Anul 2", action: "Hackathon STEM" }, { year: "Anul 3", action: "Facultate Profil Tehnic" }], match: 94 },
+            business: { title: "Business Explorer", description: "Lider cu viziune strategică.", roadmap: [{ year: "Anul 1", action: "Bazele Antreprenoriatului" }, { year: "Anul 2", action: "Lansare Proiect Pilot" }, { year: "Anul 3", action: "Management Universitar" }], match: 91 },
+            creative: { title: "Creative Thinker", description: "Expert în estetică și comunicare.", roadmap: [{ year: "Anul 1", action: "Design & Adobe Suite" }, { year: "Anul 2", action: "Portofoliu vizual" }, { year: "Anul 3", action: "Design Grafic / Media" }], match: 89 },
+            social: { title: "Impact Social", description: "Empatie și ajutorare comunitară.", roadmap: [{ year: "Anul 1", action: "Voluntariat ONG" }, { year: "Anul 2", action: "Lider Proiect Social" }, { year: "Anul 3", action: "Psihologie / Medicină" }], match: 92 }
+        };
+
+        // State Variables
+        let currentStep = 'landing';
+        let currentQuestionIdx = 0;
+        let answersObj = {};
+        let activeChallengeObj = null;
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderChallenges();
+            lucide.createIcons();
+        });
+
+        // Navigation
+        function setStep(newStep) {
+            // Hide all
+            ['landing', 'quiz', 'processing', 'result', 'pricing'].forEach(s => {
+                document.getElementById(`step-${s}`).classList.add('hidden');
+                document.getElementById(`step-${s}`).classList.remove('block');
+            });
+
+            // Setup pre-render conditions
+            if (newStep === 'quiz' && currentStep !== 'quiz') {
+                currentQuestionIdx = 0;
+                answersObj = {};
+                renderQuizQuestion();
+            }
+
+            // Show target
+            document.getElementById(`step-${newStep}`).classList.remove('hidden');
+            document.getElementById(`step-${newStep}`).classList.add('block');
+            currentStep = newStep;
+
+            lucide.createIcons(); // Refresh icons for newly shown sections
+        }
+
+        // Render functions
+        function renderChallenges() {
+            const grid = document.getElementById('challenges-grid');
+            grid.innerHTML = '';
+            dailyChallenges.forEach((game, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `flex flex-col items-center gap-3 p-5 bg-white border-b-4 ${game.color} rounded-2xl hover:bg-slate-50 transition-all group border-x border-t border-slate-50 shadow-sm hover:shadow-md hover:-translate-y-1`;
+                btn.onclick = () => openChallenge(idx);
+                btn.innerHTML = `
+                    <div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                        <i data-lucide="${game.icon}" class="w-5 h-5 ${game.iconColor}"></i>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="font-black text-sm text-slate-800 leading-tight uppercase tracking-wide">${game.title}</h3>
+                        <p class="hidden md:block text-xs text-slate-400 mt-1 leading-snug font-bold italic">${game.desc}</p>
+                    </div>
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        function renderQuizQuestion() {
+            const q = questions[currentQuestionIdx];
+
+            // Update progress
+            document.getElementById('quiz-progress-text').innerText = `Întrebarea ${currentQuestionIdx + 1} din ${questions.length}`;
+            document.getElementById('quiz-progress-bar').style.width = `${((currentQuestionIdx + 1) / questions.length) * 100}%`;
+
+            // Update question
+            document.getElementById('quiz-question-text').innerText = q.text;
+
+            // Update options
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "flex items-center p-4 md:p-5 bg-slate-50 border-2 border-transparent rounded-2xl hover:bg-white hover:border-purple-300 hover:shadow-xl transition-all text-left group active:scale-[0.98] w-full";
+                btn.onclick = () => handleAnswer(opt.value);
+                btn.innerHTML = `
+                    <span class="text-2xl mr-4 group-hover:scale-110 transition-transform">${opt.icon}</span>
+                    <span class="text-base md:text-lg font-bold text-slate-700 group-hover:text-purple-900 leading-tight">${opt.label}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(value) {
+            answersObj[currentQuestionIdx] = value;
+            if (currentQuestionIdx < questions.length - 1) {
+                currentQuestionIdx++;
+                renderQuizQuestion();
+            } else {
+                processResults();
+            }
+        }
+
+        function processResults() {
+            setStep('processing');
+            setTimeout(() => {
+                // Calculate dominant category
+                const counts = Object.values(answersObj).reduce((acc, val) => {
+                    acc[val] = (acc[val] || 0) + 1;
+                    return acc;
+                }, {});
+                const topCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                const result = resultsData[topCategory];
+
+                // Populate Result DOM
+                document.getElementById('result-match').innerText = result.match;
+                document.getElementById('result-title').innerText = result.title;
+                document.getElementById('result-desc').innerText = `"${result.description}"`;
+
+                const roadmapContainer = document.getElementById('result-roadmap');
+                roadmapContainer.innerHTML = '';
+                result.roadmap.forEach((item, idx) => {
+                    roadmapContainer.innerHTML += `
+                        <div class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-xl transition-all group text-left">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-4 font-black text-lg group-hover:scale-110 transition-transform">
+                                ${idx + 1}
+                            </div>
+                            <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 block">${item.year}</span>
+                            <p class="text-slate-800 font-bold text-sm md:text-base leading-snug">${item.action}</p>
+                        </div>
+                    `;
+                });
+
+                setStep('result');
+            }, 1500);
+        }
+
+        // Challenge Logic
+        function openChallenge(idx) {
+            activeChallengeObj = dailyChallenges[idx];
+
+            // Populate Modal
+            document.getElementById('challenge-modal-tag').innerText = activeChallengeObj.title;
+            document.getElementById('challenge-modal-question').innerText = activeChallengeObj.question;
+
+            const codeEl = document.getElementById('challenge-modal-code');
+            if(activeChallengeObj.code) {
+                codeEl.innerText = activeChallengeObj.code;
+                codeEl.classList.remove('hidden');
+            } else {
+                codeEl.classList.add('hidden');
+            }
+
+            const optsEl = document.getElementById('challenge-modal-options');
+            optsEl.innerHTML = '';
+            activeChallengeObj.options.forEach(val => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-lg hover:bg-white hover:border-indigo-300 hover:shadow-lg transition-all text-left flex justify-between items-center group";
+                // Encode quotes properly if val is string
+                btn.onclick = () => answerChallenge(val);
+                btn.innerHTML = `
+                    ${val} <i data-lucide="chevron-right" class="w-5 h-5 text-indigo-300 group-hover:translate-x-1 transition-transform"></i>
+                `;
+                optsEl.appendChild(btn);
+            });
+
+            // Set states
+            document.getElementById('challenge-status-pending').classList.remove('hidden');
+            document.getElementById('challenge-status-finished').classList.add('hidden');
+
+            document.getElementById('modal-challenge').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function answerChallenge(val) {
+            const isCorrect = val === activeChallengeObj.correct;
+
+            document.getElementById('challenge-status-pending').classList.add('hidden');
+            document.getElementById('challenge-status-finished').classList.remove('hidden');
+
+            const iconContainer = document.getElementById('challenge-result-icon');
+            if(isCorrect) {
+                iconContainer.className = "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-lg bg-green-100 text-green-600";
+                iconContainer.innerHTML = '<i data-lucide="check-circle-2" class="w-12 h-12"></i>';
+                document.getElementById('challenge-result-title').innerText = "Excelent!";
+                document.getElementById('challenge-result-desc').innerText = activeChallengeObj.explanation;
+            } else {
+                iconContainer.className = "w-20 h-20 rounded-3xl mx-auto flex items-center justify-center shadow-lg bg-red-100 text-red-600";
+                iconContainer.innerHTML = '<i data-lucide="x" class="w-12 h-12"></i>';
+                document.getElementById('challenge-result-title').innerText = "Nu-i nimic!";
+                document.getElementById('challenge-result-desc').innerText = "Fiecare încercare te aduce mai aproape de succes. Reîncearcă mâine!";
+            }
+            lucide.createIcons();
+        }
+
+        function closeChallenge() {
+            document.getElementById('modal-challenge').classList.add('hidden');
+            activeChallengeObj = null;
+        }
+
+    </script>
+</body>
+</html>
